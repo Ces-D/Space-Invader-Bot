@@ -1,0 +1,28 @@
+{
+   "compilerOptions": {
+      "target": "es6",
+      "moduleResolution": "node",
+      "module": "commonjs",
+      "removeComments": true,
+      "preserveConstEnums": true,
+      "emitDecoratorMetadata": true,
+      "experimentalDecorators": true,
+      "sourceMap": true,
+      "pretty": true,
+      "allowUnreachableCode": true,
+      "allowUnusedLabels": true,
+      "noImplicitAny": true,
+      "noImplicitReturns": false,
+      "noImplicitUseStrict": false,
+      "outDir": "dist/",
+      "listFiles": false,
+      "noEmitHelpers": true
+   },
+   "include": [
+      "src/**/*"
+   ],
+   "exclude": [
+      "node_modules"
+   ],
+   "compileOnSave": false
+}

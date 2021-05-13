@@ -1,0 +1,30 @@
+{
+  "name": "Space-Invader-Bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && node dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ces-D/Space-Invader-Bot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ces-D/Space-Invader-Bot/issues"
+  },
+  "homepage": "https://github.com/Ces-D/Space-Invader-Bot#readme",
+  "dependencies": {
+    "discord.js": "^12.5.3",
+    "dotenv": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^15.0.3",
+    "@types/ws": "^7.4.4",
+    "typescript": "^4.2.4"
+  }
+}
