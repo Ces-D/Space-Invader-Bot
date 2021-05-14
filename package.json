@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
-    "start": "npm run build && node dist/index.js"
+    "compile": "tsc --build",
+    "start": "npm run compile && node dist/launcher.js"
   },
   "repository": {
     "type": "git",
