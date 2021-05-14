@@ -31,7 +31,7 @@ class CommandBase {
 }
 
 export default class CommandHandler extends CommandBase {
-    client: Client;
+    readonly client: Client;
     constructor(client: Client) {
         super(client);
     }
