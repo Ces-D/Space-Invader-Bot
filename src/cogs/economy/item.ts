@@ -2,6 +2,9 @@ import { Role } from "discord.js";
 
 //TODO: make a controller class handling access to the object
 
+/**
+ * Handle Creation of an Item for the entire server
+ */
 export default class Item {
     readonly name: string;
     cost: number;
@@ -15,11 +18,22 @@ export default class Item {
         this.purchasableBy = purchasableBy;
     }
 
-    decreaseStock(amount: number) {}
+    decreaseStock(amount: number) {
+        this.stock -= amount;
+    }
 
-    increaseStock(amount: number) {}
+    increaseStock(amount: number) {
+        this.stock += amount;
+    }
 
-    adjustCost(amount: number) {}
+    getCost():string{
+        return `${this.cost} Schmeckle(s)`
+    }
+
+    adjustCost(amount: number) {
+        this.cost = amount;
+    }
 
     adjustPurchasableBy(allowTo: Role) {}
 }
+

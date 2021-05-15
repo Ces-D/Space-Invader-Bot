@@ -3,4 +3,5 @@ export enum PlayCommand {
     DISS = "diss",
     GAME = "game",
     CHALLENGE = "challenge",
+    SLOTS = "slots"
 }
