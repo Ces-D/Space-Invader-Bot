@@ -1,52 +1,44 @@
 import { Client, Message } from "discord.js";
+import Economy, { EconomyCommand } from "../../cogs/economy";
+import Base from "./base";
 
-class CommandBase {
-    client: Client;
-    protected PREFIX = "!";
-
-    constructor(client: Client) {
-        this.client = client;
-    }
-
-    /**
-     *
-     * @returns boolean satisfying if message is allowed through
-     */
-    protected assertCommand(message: Message): Boolean {
-        // Do nothing if
-        if (message.author.bot) return false; // msg is coming from a bot
-        if (!message.guild) return false; // msg is going into dms
-        // msg doesn't start with prefix
-        if (!message.content.startsWith(this.PREFIX)) return false;
-        return true;
-    }
-
-    protected cleanMessage(message: Message) {
-        const args = message.content.slice(this.PREFIX.length).trim().split(/ +/g);
-        const cmd = args.shift().toLowerCase();
-
-        if (cmd.length === 0) return; // command doesn't exist
-        return cmd;
-    }
-}
-
-export default class CommandHandler extends CommandBase {
+export default class CommandHandler extends Base {
     readonly client: Client;
+    readonly economy: Economy;
+
     constructor(client: Client) {
         super(client);
+        this.economy = Economy.createEconomy(client);
     }
 
     handleMessage(message: Message) {
         if (this.assertCommand(message)) {
-            const cmd = this.cleanMessage(message);
+            const { primaryCommand, subCommands } = this.Commands(message.content);
 
-            switch (cmd) {
-                case "hello":
-                    message.channel.send("Hi");
+            switch (primaryCommand) {
+                case EconomyCommand.BALANCE:
+                    this.economy.handleBalanceCommand(message.author);
                     break;
+                case EconomyCommand.TRANSFER:
+                    break;
+                case EconomyCommand.PURCHASE:
+                    break;
+                case EconomyCommand.AVAILABLE:
+                    break;
+
                 default:
-                    console.log("pong");
+                    console.log(
+                        "Command: ",
+                        primaryCommand,
+                        "\n",
+                        "SubCommands: ",
+                        subCommands
+                    );
             }
         }
+    }
+
+    static createCommandHandler(client: Client) {
+        return new CommandHandler(client);
     }
 }

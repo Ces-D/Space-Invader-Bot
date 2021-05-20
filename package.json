@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "compile": "tsc --build",
-    "start": "npm run compile && node dist/launcher.js"
+    "watch": "tsc --watch",
+    "build": "tsc --build",
+    "start": "nodemon dist/launcher.js"
   },
   "repository": {
     "type": "git",
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@types/node": "^15.0.3",
     "@types/ws": "^7.4.4",
+    "nodemon": "^2.0.7",
     "typescript": "^4.2.4"
   }
 }
