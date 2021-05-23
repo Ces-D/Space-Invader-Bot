@@ -1,10 +1,11 @@
-import { GuildChannel, GuildMember } from "discord.js";
+import { Client, GuildChannel, GuildMember } from "discord.js";
 
 export default class Permissions {
     static isAdmin(member: GuildMember): Boolean {
-        return member.hasPermission("ADMINISTRATOR");
+        return member.hasPermission("ADMINISTRATOR")
     }
-    static isAdminChannel(channel: GuildChannel, adminChannelId: string): Boolean {
-        return channel.id === adminChannelId ? true : false;
+    static isAdminChannel(channel: GuildChannel, missionControlId: string): Boolean {
+        return channel.id === missionControlId ? true : false;
     }
+
 }

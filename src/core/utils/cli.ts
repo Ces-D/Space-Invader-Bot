@@ -1,11 +1,16 @@
 import { Message } from "discord.js";
 
+export type CliCommands = {
+    primaryCommand: string;
+    subCommands: [] | string[];
+};
+
 export default class Cli {
     protected PRIMARY_PREFIX = "!";
     protected SECONDARY_PREFIX = "-";
     protected MAX_SUB_COMMANDS = 3;
 
-    private getCommands(args: string[]) {
+    private getCommands(args: string[]): CliCommands {
         let primaryCmd: string[] | undefined = [];
         let secondaryCmd: string[] | undefined = [];
 
@@ -36,5 +41,4 @@ export default class Cli {
         if (args.length > 5) console.error("To many arguments in your message");
         return this.getCommands(args);
     }
-
 }
