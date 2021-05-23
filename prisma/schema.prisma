@@ -1,0 +1,38 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// 3. Run prisma db pull to turn your database schema into a Prisma data model.
+// 4. Run prisma generate to install Prisma Client. You can then start querying your database.
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Wallet {
+  discordId Int         @id
+  userTag   String
+  balance   Int
+  Possesion Possesion[]
+}
+
+model Item {
+  id        Int         @id @default(autoincrement())
+  name      String
+  price     Int
+  stock     Int
+  Possesion Possesion[]
+}
+
+model Possesion {
+  id            Int    @id @default(autoincrement())
+  owner         Wallet @relation(fields: [userDiscordId], references: [discordId])
+  item          Item   @relation(fields: [itemId], references: [id])
+  stock         Int
+  userDiscordId Int
+  itemId        Int
+}

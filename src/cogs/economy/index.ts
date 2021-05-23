@@ -21,7 +21,6 @@ export default class Economy {
     }
 
     handleBalanceCommand(author: User) {
-
         return;
     }
 

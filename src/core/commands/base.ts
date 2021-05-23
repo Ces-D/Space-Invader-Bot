@@ -1,7 +1,7 @@
 import { Client, Message } from "discord.js";
-import CliBase from "../utils/cli";
+import Cli from "../utils/cli";
 
-export default class CommandBase extends CliBase {
+export default class CommandBase extends Cli {
     client: Client;
 
     constructor(client: Client) {

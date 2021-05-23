@@ -1,5 +1,6 @@
 import { Client, Message } from "discord.js";
 import Economy, { EconomyCommand } from "../../cogs/economy";
+import Setup, { SetupCommand } from "../utils/setup";
 import Base from "./base";
 
 export default class CommandHandler extends Base {
@@ -16,6 +17,9 @@ export default class CommandHandler extends Base {
             const { primaryCommand, subCommands } = this.Commands(message.content);
 
             switch (primaryCommand) {
+                case SetupCommand.MISSION_CONTROL:
+                    Setup.createBotMissionControl(message.guild);
+                    break;
                 case EconomyCommand.BALANCE:
                     this.economy.handleBalanceCommand(message.author);
                     break;

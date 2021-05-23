@@ -1,4 +1,6 @@
-export default class CliBase {
+import { Message } from "discord.js";
+
+export default class Cli {
     protected PRIMARY_PREFIX = "!";
     protected SECONDARY_PREFIX = "-";
     protected MAX_SUB_COMMANDS = 3;
@@ -34,4 +36,5 @@ export default class CliBase {
         if (args.length > 5) console.error("To many arguments in your message");
         return this.getCommands(args);
     }
+
 }

@@ -2,3 +2,7 @@ node_modules
 .env
 .vscode
 dist
+
+migrations
+dev.db
+dev.db-journal
