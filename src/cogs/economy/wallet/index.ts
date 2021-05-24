@@ -1,5 +1,5 @@
 import { GuildMember } from "discord.js";
-import Possession from "./possession";
+import Possession from "../possession";
 
 //TODO: figure out how to make rollbacks in case any act fails. IE Possession transfer
 

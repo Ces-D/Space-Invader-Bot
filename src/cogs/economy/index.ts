@@ -26,9 +26,15 @@ export default class Economy {
     return await this.prisma.item.findMany();
   }
 
-  async createItem({ primaryCommand, subCommands }: CliCommands, message: Message) {
-    if (Permissions.isAdmin(message.member)) {
-
+  async createItem(
+    { primaryCommand, subCommands }: CliCommands,
+    message: Message,
+    missionControlId: string
+  ) {
+    if (
+      Permissions.isAdmin(message.member) &&
+      Permissions.isAdminChannel(message.channel, missionControlId)
+    ) {
     }
   }
 

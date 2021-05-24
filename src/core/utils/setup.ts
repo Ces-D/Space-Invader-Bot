@@ -10,7 +10,7 @@ export enum SetupCommand {
 
 export default class Setup {
     readonly client: Client;
-    protected missionControlId: string;
+    missionControlId: string;
 
     constructor(client: Client) {
         this.client = client;

@@ -32,6 +32,10 @@ export default class CommandHandler extends Base {
           this.economy.getItems();
           break;
 
+        case EconomyCommand.CREATE_GUILD_ITEM:
+          this.economy.createItem(commands, message, this.setup.missionControlId);
+          break;
+
         case EconomyCommand.GET_USER_POSSESSIONS:
           this.economy.getUserPossessions(commands, message);
 
