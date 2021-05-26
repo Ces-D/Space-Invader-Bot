@@ -1,6 +1,7 @@
 import { PrismaClient } from ".prisma/client";
 import { Client, Message } from "discord.js";
 import Economy, { EconomyCommand } from "../../cogs/economy";
+import Cache from "../utils/cache";
 import Setup, { SetupCommand } from "../utils/setup";
 import Base from "./base";
 
@@ -8,11 +9,13 @@ export default class CommandHandler extends Base {
   readonly client: Client;
   readonly economy: Economy;
   readonly setup: Setup;
+  readonly cache: Cache;
 
   constructor(client: Client, prisma: PrismaClient) {
     super(client);
     this.economy = Economy.createEconomy(client, prisma);
     this.setup = Setup.createSetup(client);
+    this.cache = Cache.createCache();
   }
 
   handleMessage(message: Message) {
