@@ -1,44 +1,19 @@
+import { PrismaClient } from ".prisma/client";
+import { GuildMember } from "discord.js";
 import Item from "./item";
-import Wallet from "./wallet";
 
 export default class Possession {
-    name: string;
-    stock: number;
+  readonly prisma: PrismaClient;
 
-    constructor(item: Item) {
-        this.name = item.name;
-        this.stock = 1;
-    }
+  constructor(prisma: PrismaClient) {
+    this.prisma = prisma;
+  }
 
-    reduceStock(amount: number) {
-        this.stock -= amount;
-    }
+  addPossession(member: GuildMember, itemName: string) {}
 
-    increaseStock(amount: number) {
-        this.stock += amount;
-    }
+  adjustStock(member: GuildMember, amount: number) {}
 
-    static sellToMember(
-        price: number,
-        possession: Possession,
-        owner: Wallet,
-        buyer: Wallet
-    ) {
-        if (buyer.getBalanceInt() > price) {
-            buyer.transferFundsTo(owner, price);
-            possession.reduceStock(1);
-            buyer.addPossession(possession);
-        }
-    }
+  sell(owner: GuildMember, buyer: GuildMember, itemName: string, price: number) {}
 
-    static purchaseFromBot(price: number, item: Item, wallet: Wallet): Possession {
-        if (wallet.getBalanceInt() > price) {
-            wallet.withdrawFunds(price);
-            item.decreaseStock(1);
-            return new Possession(item);
-        }
-        throw new Error(
-            `You do not have enough funds to purchase ${item.name}: ${item.getCost()}`
-        );
-    }
+  purchaseFromBot(member: GuildMember, itemName: string) {}
 }

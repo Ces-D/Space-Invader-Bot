@@ -15,12 +15,20 @@ const main = () => {
     prisma.$connect().then(() => console.log("DB Connected"));
   });
 
-  client.on(Constants.Events.MESSAGE_CREATE, (m) => {
-    commandHandler.handleMessage(m);
-  });
-
   client.once(Constants.Events.DISCONNECT, () => {
     prisma.$disconnect().then(() => console.log("DB Disconnected"));
+  });
+
+  client.on(Constants.Events.RECONNECTING, () => {
+    prisma.$connect().then(() => console.log("DB Connected"));
+  });
+
+  client.on(Constants.Events.ERROR, () => {
+    prisma.$disconnect().then(() => console.log("DB Disconnected"));
+  });
+
+  client.on(Constants.Events.MESSAGE_CREATE, (m) => {
+    commandHandler.handleMessage(m);
   });
 
   client.login(process.env.BOT_TOKEN);

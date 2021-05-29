@@ -1,10 +1,17 @@
+import { PrimaryCommand } from "./cli";
+
+interface Key {
+  command: PrimaryCommand;
+  discordId: string;
+}
+
 class CacheNode {
-  readonly key: any;
+  readonly key: Key;
   value: any;
   prev: CacheNode;
   next: CacheNode;
 
-  constructor(key: any, value: any) {
+  constructor(key: Key, value: any) {
     this.key = key;
     this.value = value;
     this.prev = null;
@@ -16,7 +23,7 @@ class CacheNode {
  * LRU Cache
  */
 export default class Cache {
-  cache: Map<any, any>;
+  cache: Map<Key, any>;
   count: number;
   head: CacheNode;
   tail: CacheNode;
@@ -30,7 +37,7 @@ export default class Cache {
     this.tail = null;
   }
 
-  set(key: any, value: any) {
+  set(key: Key, value: any) {
     if (this.cache.has(key)) {
       const node = this.cache.get(key);
       node.value = value;
@@ -49,7 +56,7 @@ export default class Cache {
   /**
    * @returns value of a given key
    */
-  get(key: any) {
+  get(key: Key) {
     if (!this.cache.has(key)) {
       return false;
     }
@@ -60,7 +67,7 @@ export default class Cache {
   /**
    * Uses the cacheNode with the given key and marks it as most recently used
    */
-  private use(key: any) {
+  private use(key: Key) {
     const node = this.cache.get(key);
     if (node === this.head) {
       return;
@@ -110,7 +117,7 @@ export default class Cache {
   /**
    * Add a new cacheNode into queue
    */
-  private insert(key: any, value: any) {
+  private insert(key: Key, value: any) {
     const node = new CacheNode(key, value);
     this.count++;
     this.cache.set(key, node);
@@ -123,9 +130,5 @@ export default class Cache {
       node.next = this.head;
       this.head = node;
     }
-  }
-
-  static createCache(): Cache {
-    return new Cache();
   }
 }

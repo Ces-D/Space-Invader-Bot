@@ -13,9 +13,9 @@ export default class CommandHandler extends Base {
 
   constructor(client: Client, prisma: PrismaClient) {
     super(client);
-    this.economy = Economy.createEconomy(client, prisma);
     this.setup = Setup.createSetup(client);
-    this.cache = Cache.createCache();
+    this.cache = new Cache();
+    this.economy = new Economy(client, prisma, this.cache);
   }
 
   handleMessage(message: Message) {
@@ -32,11 +32,11 @@ export default class CommandHandler extends Base {
           break;
 
         case EconomyCommand.GET_GUILD_ITEMS:
-          this.economy.getItems();
+          this.economy.getGuildItems(message);
           break;
 
         case EconomyCommand.CREATE_GUILD_ITEM:
-          this.economy.createItem(commands, message, this.setup.missionControlId);
+          this.economy.createGuildItem(commands, message, this.setup.missionControlId);
           break;
 
         case EconomyCommand.GET_USER_POSSESSIONS:

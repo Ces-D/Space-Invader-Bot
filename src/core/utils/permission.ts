@@ -1,7 +1,5 @@
 import {
-  Client,
   DMChannel,
-  GuildChannel,
   GuildMember,
   NewsChannel,
   TextChannel,
