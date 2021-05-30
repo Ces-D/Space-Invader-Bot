@@ -17,3 +17,4 @@ export default class Possession {
 
   purchaseFromBot(member: GuildMember, itemName: string) {}
 }
+//TODO: get all the possession functions up

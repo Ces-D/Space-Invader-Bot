@@ -16,7 +16,8 @@
       "noImplicitUseStrict": false,
       "outDir": "dist/",
       "listFiles": false,
-      "noEmitHelpers": true
+      "noEmitHelpers": true,
+      "importHelpers": true
    },
    "include": [
       "src/**/*"

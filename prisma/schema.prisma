@@ -14,21 +14,21 @@ generator client {
 }
 
 model Wallet {
-  discordId Int         @id
-  userTag   String
-  balance   Int
-  Possesion Possesion[]
+  discordId  Int          @id
+  userTag    String
+  balance    Int
+  Possession Possession[]
 }
 
 model Item {
-  id        Int         @id @default(autoincrement())
-  name      String
-  price     Int
-  stock     Int
-  Possesion Possesion[]
+  id         Int          @id @default(autoincrement())
+  name       String
+  price      Int
+  stock      Int
+  Possession Possession[]
 }
 
-model Possesion {
+model Possession {
   id            Int    @id @default(autoincrement())
   owner         Wallet @relation(fields: [userDiscordId], references: [discordId])
   item          Item   @relation(fields: [itemId], references: [id])

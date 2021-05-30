@@ -1,5 +1,5 @@
 import { PrismaClient } from ".prisma/client";
-import { Guild, GuildMember } from "discord.js";
+import { GuildMember } from "discord.js";
 import Possession from "./possession";
 
 export default class Wallet extends Possession {
@@ -33,10 +33,11 @@ export default class Wallet extends Possession {
       balance = await this.getBalance(member);
     }
 
-    await this.prisma.wallet.update({
+    this.prisma.wallet.update({
       where: { discordId: parseInt(member.id) },
       data: { balance: balance - amount },
     });
+    return;
   }
 
   async getBalance(member: GuildMember): Promise<number> {
@@ -108,3 +109,6 @@ export default class Wallet extends Possession {
     return true;
   }
 }
+
+
+//TODO: test the created functions

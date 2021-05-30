@@ -36,4 +36,3 @@ const main = () => {
 
 main();
 
-//TODO: incorporate the cache into the Economy class

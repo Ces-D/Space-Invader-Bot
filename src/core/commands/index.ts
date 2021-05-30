@@ -31,6 +31,18 @@ export default class CommandHandler extends Base {
           this.economy.getUserBalance(commands, message);
           break;
 
+        case EconomyCommand.DEPOSIT_USER_WALLET_FUNDS:
+          this.economy.depositUserFunds(commands, message);
+          break;
+
+        case EconomyCommand.TRANSFER_FUNDS_USER_TO_USER_WALLET:
+          this.economy.transferFundsUserToUser(commands, message);
+          break;
+
+        case EconomyCommand.GET_USER_POSSESSIONS:
+          this.economy.getUserPossessions(commands, message);
+          break;
+
         case EconomyCommand.GET_GUILD_ITEMS:
           this.economy.getGuildItems(message);
           break;
@@ -38,9 +50,6 @@ export default class CommandHandler extends Base {
         case EconomyCommand.CREATE_GUILD_ITEM:
           this.economy.createGuildItem(commands, message, this.setup.missionControlId);
           break;
-
-        case EconomyCommand.GET_USER_POSSESSIONS:
-          this.economy.getUserPossessions(commands, message);
 
         default:
           console.log(

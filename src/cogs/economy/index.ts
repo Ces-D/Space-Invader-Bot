@@ -28,14 +28,14 @@ export default class Economy {
     this.item = new Item(prisma);
   }
 
-  getUserBalance(commands: CliCommands, message: Message) {
+  async getUserBalance(commands: CliCommands, message: Message) {
     const balance =
       this.cache.get({
         command: commands.primaryCommand,
         discordId: message.member.id,
-      }) || this.wallet.getBalance(message.member);
+      }) || await this.wallet.getBalance(message.member);
 
-    message.reply(`${message.author.tag} your balance is ${balance} Schmeckle(s)`);
+    message.reply(`Your balance is ${balance} Schmeckle(s)`);
   }
 
   depositUserFunds(commands: CliCommands, message: Message) {
@@ -63,12 +63,32 @@ export default class Economy {
   /**
    *
    * @example Command Message Format
+   * !command -amount -mention
    * !transfer -10 -@ces
    */
   transferFundsUserToUser(commands: CliCommands, message: Message) {
-    // TODO: convert the toWallet into a GuildMember type
-    const toWallet = commands.subCommands[1];
-    // TODO: finish the transfer function
+    const toWallet = message.mentions.members.first();
+    const fromWallet = message.member;
+    const amount = parseInt(commands.subCommands[0]);
+
+    const cachedFromBalance =
+      this.cache.get({ command: commands.primaryCommand, discordId: fromWallet.id }) ||
+      null;
+    const cachedToBalance =
+      this.cache.get({ command: commands.primaryCommand, discordId: toWallet.id }) ||
+      null;
+
+    const transferState = this.wallet.transferFunds(
+      fromWallet,
+      toWallet,
+      amount,
+      cachedFromBalance,
+      cachedToBalance
+    );
+
+    transferState
+      ? message.reply(`The transfer of ${amount} Schmeckle(s) was successful`)
+      : message.reply(`To bad! The transfer of ${amount} Schmeckle(s) did not go though`);
   }
 
   getGuildItems(message: Message) {}
