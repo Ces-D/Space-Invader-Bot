@@ -40,3 +40,11 @@ export default class Cli {
     return this.getCommands(args);
   }
 }
+
+
+// TODO: There should be a way to limit the kinds of commands that go through.
+/**
+ * Only certain commands require sub commands and only specific sub commands are accepted based on the type 
+ * of function
+ * 
+ */

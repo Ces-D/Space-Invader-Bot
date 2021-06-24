@@ -112,3 +112,4 @@ export default class Wallet extends Possession {
 
 
 //TODO: test the created functions
+// TODO: if any failure rollback in transferFunds
