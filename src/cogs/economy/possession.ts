@@ -1,20 +1,12 @@
-import { PrismaClient } from ".prisma/client";
-import { GuildMember } from "discord.js";
-import Item from "./item";
+import { PrismaClient } from "@prisma/client";
+import { Client } from "discord.js";
 
 export default class Possession {
+  readonly client: Client;
   readonly prisma: PrismaClient;
 
-  constructor(prisma: PrismaClient) {
+  constructor(client: Client, prisma: PrismaClient) {
+    this.client = client;
     this.prisma = prisma;
   }
-
-  addPossession(member: GuildMember, itemName: string) {}
-
-  adjustStock(member: GuildMember, amount: number) {}
-
-  sell(owner: GuildMember, buyer: GuildMember, itemName: string, price: number) {}
-
-  purchaseFromBot(member: GuildMember, itemName: string) {}
 }
-//TODO: get all the possession functions up
