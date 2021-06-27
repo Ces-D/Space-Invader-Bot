@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { Client, Message } from "discord.js";
 import Economy from "../../cogs/Economy";
-import { EconomyCommands } from "../../cogs/Economy/commands";
+import { UserEconomyCmds, AdminEconomyCmds } from "../../cogs/Economy/commands";
 
 export default class CommandControl {
   protected PRIMARY_PREFIX = "$";
@@ -14,6 +14,7 @@ export default class CommandControl {
   private isAdmissableMessage(message: Message): boolean {
     if (message.author.bot) return false; // msg is coming from a bot
     if (!message.guild) return false; // msg is going into dms
+    if (!message.member) return false; // msg is coming from outside guild user
     if (message.content.charAt(0) !== this.PRIMARY_PREFIX) return false; // message is command
     return true;
   }
@@ -31,32 +32,25 @@ export default class CommandControl {
     if (this.isAdmissableMessage(message)) {
       const command = this.parseForCommand(message);
       switch (command) {
-        case EconomyCommands.User.BALANCE.primary:
-          this.Economy.handleMessage(command, message);
+        case UserEconomyCmds.BALANCE:
+          this.Economy.balanceCommand(message);
           break;
-        case EconomyCommands.User.MERCHANDISE.primary:
-          this.Economy.handleMessage(command, message);
+        case UserEconomyCmds.MERCHANDISE:
           break;
-        case EconomyCommands.User.POSSESSIONS.primary:
-          this.Economy.handleMessage(command, message);
+        case UserEconomyCmds.POSSESSIONS:
           break;
-        case EconomyCommands.User.PURCHASE.primary:
-          this.Economy.handleMessage(command, message);
+        case UserEconomyCmds.PURCHASE:
           break;
-        case EconomyCommands.Admin.CREATE.primary:
-          this.Economy.handleMessage(command, message);
+        case AdminEconomyCmds.CREATE:
           break;
-        case EconomyCommands.Admin.DEPOSIT.primary:
-          this.Economy.handleMessage(command, message);
+        case AdminEconomyCmds.DEPOSIT:
+          this.Economy.depositCommand(message);
           break;
-        case EconomyCommands.Admin.LIST.primary:
-          this.Economy.handleMessage(command, message);
+        case AdminEconomyCmds.LIST:
           break;
-        case EconomyCommands.Admin.REMOVE.primary:
-          this.Economy.handleMessage(command, message);
+        case AdminEconomyCmds.REMOVE:
           break;
-        case EconomyCommands.Admin.WITHDRAW.primary:
-          this.Economy.handleMessage(command, message);
+        case AdminEconomyCmds.WITHDRAW:
           break;
         default:
           console.log(command);

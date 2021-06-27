@@ -24,7 +24,7 @@ export default class Wallet {
       })
       .catch((error) => {
         console.error("WALLET GET: ", error);
-        throw new Error("Your balance could not be found. Try again");
+        throw "Your balance could not be found. Try again";
       });
     return wallet;
   }
@@ -43,7 +43,7 @@ export default class Wallet {
       })
       .catch((error) => {
         console.error("WALLET CREATE: ", error);
-        throw new Error("Your balance could not be set. Try again");
+        throw "Your balance could not be set. Try again";
       });
 
     return wallet;
@@ -54,9 +54,7 @@ export default class Wallet {
     let updatedRecord;
 
     if (oldRecord.balance < amount && withdraw) {
-      throw new Error(
-        "Sorry you do not have the funds to withdraw that amount. Check balance"
-      );
+      throw "Sorry you do not have the funds to withdraw that amount. Check balance";
     } else if (withdraw) {
       updatedRecord = await this.prisma.wallet.update({
         where: { discordId: discordId },

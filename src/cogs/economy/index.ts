@@ -1,10 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import { Client, Message } from "discord.js";
-import { parseForArguments } from "../../core/utils/parser";
-import { EconomyCommands } from "./commands";
+import { parseForArguments, hasAdminPermissions } from "../../core/utils/parser";
 import Item from "./item";
 import Possession from "./possession";
 import Wallet from "./wallet";
+import { EconomySubCmds } from "./commands";
 
 export default class Economy {
   readonly Wallet: Wallet;
@@ -17,42 +17,24 @@ export default class Economy {
     this.Possession = new Possession(client, prisma);
   }
 
-  private async balanceCommand(message: Message) {
+  async balanceCommand(message: Message) {
     try {
-      if (message.member) {
-        const w = await this.Wallet.get(parseInt(message.author.id));
-        message.reply(`You have ${w.balance} Schmeckle(s)`);
-      } else {
-        throw new Error("You are not a member");
-      }
+      const w = await this.Wallet.get(parseInt(message.author.id));
+      message.reply(`You have ${w.balance} Schmeckle(s)`);
     } catch (error) {
       message.reply(error);
     }
   }
 
-  handleMessage(command: string, message: Message) {
-    switch (command) {
-      case EconomyCommands.User.BALANCE.primary:
-        this.balanceCommand(message);
-        break;
-      case EconomyCommands.User.MERCHANDISE.primary:
-        break;
-      case EconomyCommands.User.POSSESSIONS.primary:
-        break;
-      case EconomyCommands.User.PURCHASE.primary:
-        break;
-      case EconomyCommands.Admin.CREATE.primary:
-        break;
-      case EconomyCommands.Admin.DEPOSIT.primary:
-        break;
-      case EconomyCommands.Admin.LIST.primary:
-        break;
-      case EconomyCommands.Admin.REMOVE.primary:
-        break;
-      case EconomyCommands.Admin.WITHDRAW.primary:
-        break;
-      default:
-        console.log("Economy Default: ", command);
+  async depositCommand(message: Message) {
+    try {
+      if (hasAdminPermissions(message.member)) {
+        const args = parseForArguments(message, true, [EconomySubCmds.AMOUNT]);
+        //TODO: confirm the structure that args is going to be returned as. convert that into a type
+      }
+      return; // ignore msg
+    } catch (error) {
+      message.reply(error);
     }
   }
 }
