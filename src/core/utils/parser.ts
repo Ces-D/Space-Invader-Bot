@@ -1,27 +1,39 @@
 import { GuildMember, Message, Permissions } from "discord.js";
 
+type Arguments = {
+  member?: GuildMember;
+  [key: string]: any;
+};
+
+/**
+ *
+ * @param requiresMention substitute for the name variable
+ * @param subCmds array of values searching for
+ * @returns object containing the sub command values
+ */
 export const parseForArguments = (
   message: Message,
   requiresMention: boolean,
   subCmds: string[]
 ) => {
-  let args: { [key: string]: any } = {};
+  let args: Arguments = {};
   const cleanedMsg = message.content.toLowerCase().trim().split(" ").slice(1);
   if (requiresMention) {
     if (message.mentions.members?.first(1).length === 1) {
-      args["member"] = message.mentions.members.first(1);
+      args["member"] = message.mentions.members.first();
     } else {
       throw "You are missing arguments. Try again";
     }
   }
+  // loop through message and grab only the values that are in the subCmds array
   cleanedMsg.forEach((m) => {
     const halves = m.split("=");
     if (halves.length === 2) {
-      subCmds.includes(halves[0]);
-      args[halves[0]] = halves[1];
+      if (subCmds.includes(halves[0])) {
+        args[halves[0]] = halves[1];
+      }
     }
   });
-  console.log("Arguments: ", args);
   return args;
 };
 
@@ -33,4 +45,20 @@ export const hasAdminPermissions = (member: GuildMember | null): boolean => {
   return false;
 };
 
-//TODO: make sure there are no spaces between the subcommands and the = sign
+export const argumentsFulfilled = (
+  args: Arguments,
+  subCmds: string[],
+  requiresMention: boolean
+): boolean => {
+  let fulfilled = true;
+  for (const cmd of subCmds) {
+    if (args[cmd] === undefined) {
+      fulfilled = false;
+    }
+  }
+  if (requiresMention && args["member"] === undefined) {
+    fulfilled = false;
+  }
+
+  return fulfilled;
+};

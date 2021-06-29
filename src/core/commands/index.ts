@@ -36,12 +36,15 @@ export default class CommandControl {
           this.Economy.balanceCommand(message);
           break;
         case UserEconomyCmds.MERCHANDISE:
+          this.Economy.getMerchandiseCommand(message);
           break;
         case UserEconomyCmds.POSSESSIONS:
+          this.Economy.getPossessionsCommand(message);
           break;
         case UserEconomyCmds.PURCHASE:
           break;
         case AdminEconomyCmds.CREATE:
+          this.Economy.createItemCommand(message);
           break;
         case AdminEconomyCmds.DEPOSIT:
           this.Economy.depositCommand(message);
@@ -51,6 +54,7 @@ export default class CommandControl {
         case AdminEconomyCmds.REMOVE:
           break;
         case AdminEconomyCmds.WITHDRAW:
+          this.Economy.withdrawCommand(message);
           break;
         default:
           console.log(command);
