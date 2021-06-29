@@ -155,4 +155,63 @@ export default class Economy {
         message.reply(error);
       });
   }
+
+  // TODO: test this
+  removePossessionCommand(message: Message) {
+    if (hasAdminPermissions(message.member)) {
+      const subCmds = [EconomySubCmds.ITEM, EconomySubCmds.AMOUNT];
+      const args = parseForArguments(message, true, subCmds);
+      if (argumentsFulfilled(args, subCmds, true)) {
+        const discordId = (args["member"] && parseInt(args["member"].id)) || 0; // FIXME: This should not throw error. RN it might
+
+        this.Item.get(args[EconomySubCmds.ITEM])
+          .then((item) => {
+            if (item) {
+              const possession = this.Possession.getPossession(discordId, item?.id);
+              return possession;
+            } else {
+              throw `They do not own ${args[EconomySubCmds.ITEM]}`;
+            }
+          })
+          .then((possession) => {
+            if (possession) {
+              const update = this.Possession.updateStock(
+                possession,
+                parseInt(args[EconomySubCmds.AMOUNT]),
+                true
+              );
+              return update;
+            } else {
+              throw "Could not find the item";
+            }
+          })
+          .then((update) => {
+            message.reply(
+              `Their ${args[EconomySubCmds.ITEM]} stock has been reduced to ${
+                update.stock
+              }`
+            );
+          })
+          .catch((error) => {
+            message.reply(error);
+          });
+      } else {
+        message.reply(MISSING_ARGUMENTS_ERROR);
+      }
+    } else {
+      return; // ignore msg
+    }
+  }
+
+  listWalletCommand(message: Message) {
+    if (hasAdminPermissions(message.member)) {
+      const subCmds = [EconomySubCmds.AMOUNT];
+      const args = parseForArguments(message, true, subCmds);
+      if (argumentsFulfilled(args, subCmds, true)) {
+      } else {
+        message.reply(MISSING_ARGUMENTS_ERROR);
+      }
+    }
+    return; // ignore msg
+  }
 }

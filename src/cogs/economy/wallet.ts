@@ -28,6 +28,20 @@ export default class WalletController {
     return wallet;
   }
 
+  getComplete(discordId: number) {
+    const wallet = this.prisma.wallet
+      .findUnique({
+        where: { discordId: discordId },
+        rejectOnNotFound: true,
+        include: { Possession: true },
+      })
+      .catch((error) => {
+        console.error("Complete Wallet Error\n\n", error);
+        throw "Sorry we could not get the complete wallet. Try again";
+      });
+    return wallet;
+  }
+
   get(discordId: number) {
     const wallet = this.prisma.wallet
       .findUnique({ where: { discordId: discordId }, rejectOnNotFound: true })
@@ -77,6 +91,5 @@ export default class WalletController {
  * Consider using .then with the functions to gain greater variability in how we pipe together
  * prisma calls
  */
-
 
 //TODO: use the increment and decrement of update to update

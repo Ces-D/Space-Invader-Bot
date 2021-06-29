@@ -28,6 +28,19 @@ export default class PossessionController {
     return possessions;
   }
 
+  getPossession(discordId: number, itemId: number) {
+    const possession = this.prisma.possession
+      .findFirst({
+        where: { userDiscordId: discordId, itemId: itemId },
+      })
+      .catch((error) => {
+        console.error("Get Possession Error\n\n", error);
+        throw "There was a problem getting the possession";
+      });
+
+    return possession;
+  }
+
   updateStock(item: Possession, amount: number, remove: boolean) {
     let updatedPossession: Promise<Possession>;
     if (remove) {
@@ -45,5 +58,7 @@ export default class PossessionController {
       console.error("Update Stock Error\n\n", error);
       throw "Could not update the item. Try again";
     });
+
+    return updatedPossession;
   }
 }

@@ -33,4 +33,18 @@ export default class Item {
     });
     return allItems;
   }
+
+  get(name: string) {
+    const item = this.prisma.item
+      .findFirst({
+        where: {
+          name: name,
+        },
+      })
+      .catch((error) => {
+        console.error("Get Item Error\n\n", error);
+        throw "Could not get the Item";
+      });
+    return item;
+  }
 }
