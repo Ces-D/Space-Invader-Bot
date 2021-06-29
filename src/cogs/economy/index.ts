@@ -22,6 +22,24 @@ export default class Economy {
     this.Possession = new Possession(client, prisma);
   }
 
+  createCommand(message: Message) {
+    const subCmds: [] = [];
+    const args = parseForArguments(message, true, subCmds);
+    if (argumentsFulfilled(args, subCmds, true)) {
+      const discordId = (args["member"] && parseInt(args["member"].id)) || 0; //FIXME
+
+      this.Wallet.create(discordId, message.author.username)
+        .then((wallet) => {
+          message.reply(
+            `Congrats. You can now purchase items using $merchandise command. You balance is ${wallet.balance} Schmeckle(s)`
+          );
+        })
+        .catch((error) => {
+          message.reply(error);
+        });
+    }
+  } // FIXME: somehow I am missing arguments
+
   balanceCommand(message: Message) {
     this.Wallet.get(parseInt(message.author.id))
       .then((w) => {
@@ -39,10 +57,7 @@ export default class Economy {
       if (argumentsFulfilled(args, subCmds, true)) {
         const discordId = (args["member"] && parseInt(args["member"].id)) || 0; // FIXME: This should not throw error. RN it might
 
-        this.Wallet.get(discordId)
-          .then((account) => {
-            return this.Wallet.updateBalance(account, args[EconomySubCmds.AMOUNT], false);
-          })
+        this.Wallet.updateBalance(discordId, args[EconomySubCmds.AMOUNT], false)
           .then((updatedAccount) => {
             message.reply(
               `The transfer was complete. ${updatedAccount.userTag}'s balance is now ${updatedAccount.balance} Schmeckle(s)`
@@ -66,10 +81,7 @@ export default class Economy {
       if (argumentsFulfilled(args, subCmds, true)) {
         const discordId = (args["member"] && parseInt(args["member"].id)) || 0; // FIXME: This should not throw error. RN it might
 
-        this.Wallet.get(discordId)
-          .then((account) => {
-            return this.Wallet.updateBalance(account, args[EconomySubCmds.AMOUNT], true);
-          })
+        this.Wallet.updateBalance(discordId, args[EconomySubCmds.AMOUNT], true)
           .then((updatedAccount) => {
             message.reply(
               `The transfer was complete. ${updatedAccount.userTag}'s balance is now ${updatedAccount.balance} Schmeckle(s)`
@@ -117,7 +129,7 @@ export default class Economy {
       .then((possessions) => {
         let data: string[][] = [];
         possessions.forEach((possession) => {
-          const instance = [possession.item.name, possession.stock.toString()];
+          const instance = [possession.itemName, possession.stock.toString()];
           data.push(instance);
         });
         const embeddedItem = embedTable(
@@ -154,60 +166,60 @@ export default class Economy {
       .catch((error) => {
         message.reply(error);
       });
-  }
+  } //FIXME the embeds are fucked up
 
-  // TODO: test this
   removePossessionCommand(message: Message) {
     if (hasAdminPermissions(message.member)) {
       const subCmds = [EconomySubCmds.ITEM, EconomySubCmds.AMOUNT];
       const args = parseForArguments(message, true, subCmds);
       if (argumentsFulfilled(args, subCmds, true)) {
-        const discordId = (args["member"] && parseInt(args["member"].id)) || 0; // FIXME: This should not throw error. RN it might
+        const discordId = (args["member"] && parseInt(args["member"].id)) || 0; //FIXME
 
-        this.Item.get(args[EconomySubCmds.ITEM])
-          .then((item) => {
-            if (item) {
-              const possession = this.Possession.getPossession(discordId, item?.id);
-              return possession;
-            } else {
-              throw `They do not own ${args[EconomySubCmds.ITEM]}`;
-            }
-          })
+        this.Possession.updateStock(
+          args[EconomySubCmds.ITEM],
+          discordId,
+          args[EconomySubCmds.AMOUNT],
+          true
+        )
           .then((possession) => {
-            if (possession) {
-              const update = this.Possession.updateStock(
-                possession,
-                parseInt(args[EconomySubCmds.AMOUNT]),
-                true
-              );
-              return update;
-            } else {
-              throw "Could not find the item";
-            }
-          })
-          .then((update) => {
             message.reply(
-              `Their ${args[EconomySubCmds.ITEM]} stock has been reduced to ${
-                update.stock
-              }`
+              `Reduced the stock of ${possession.itemName} to ${possession.stock}`
             );
           })
           .catch((error) => {
             message.reply(error);
           });
-      } else {
-        message.reply(MISSING_ARGUMENTS_ERROR);
       }
-    } else {
-      return; // ignore msg
     }
+    return; //ignore msg
   }
 
+  // TODO: test this
   listWalletCommand(message: Message) {
     if (hasAdminPermissions(message.member)) {
-      const subCmds = [EconomySubCmds.AMOUNT];
+      const subCmds: [] = [];
       const args = parseForArguments(message, true, subCmds);
       if (argumentsFulfilled(args, subCmds, true)) {
+        const discordId = (args["member"] && parseInt(args["member"].id)) || 0; // FIXME: This should not throw error. RN it might
+
+        let possessionData: string[][] = [];
+        this.Wallet.getComplete(discordId).then((wallet) => {
+          wallet.Possession.forEach((possession) => {
+            const instance = [possession.itemName, possession.stock.toString()];
+            possessionData.push(instance);
+          });
+
+          const embeddedItem = embedTable(
+            possessionData,
+            "RANDOM",
+            ["Name", "Stock"],
+            `${wallet.userTag} Possession(s)`
+          );
+
+          message.reply(
+            `${wallet.userTag} has a balance of ${wallet.balance} Schmeckle(s)\n${embeddedItem}`
+          );
+        });
       } else {
         message.reply(MISSING_ARGUMENTS_ERROR);
       }

@@ -7,14 +7,15 @@ export enum UserEconomyCmds {
   POSSESSIONS = "possessions", // check their possessions
   MERCHANDISE = "merchandise", // check the guilds purchasable merchandise
   PURCHASE = "purchase", // purchase merchandise from bot or member //TODO
+  CREATE = "create", // create your wallet with starting  // TODO
 }
 
 export enum AdminEconomyCmds {
   CREATE = "create", // create new guild item
   DEPOSIT = "deposit", // deposit funds for a member
   WITHDRAW = "withdraw", // withdraw funds from a member
-  REMOVE = "remove", // remove possessions from a member //TODO
-  LIST = "list", // list economy information about a member //TODO
+  REMOVE = "remove", // remove possessions from a member
+  LIST = "list", // list economy information about a member
 }
 
 export enum EconomySubCmds {

@@ -11,11 +11,11 @@ export default class WalletController {
     this.prisma = prisma;
   }
 
-  create(discordId: number, tag: string) {
+  create(memberId: number, tag: string) {
     const wallet = this.prisma.wallet
       .create({
         data: {
-          discordId: discordId,
+          memberId: memberId,
           userTag: tag,
           balance: this.STARTING_BALANCE,
         },
@@ -28,23 +28,23 @@ export default class WalletController {
     return wallet;
   }
 
-  getComplete(discordId: number) {
+  getComplete(memberId: number) {
     const wallet = this.prisma.wallet
       .findUnique({
-        where: { discordId: discordId },
+        where: { memberId: memberId },
         rejectOnNotFound: true,
         include: { Possession: true },
       })
       .catch((error) => {
         console.error("Complete Wallet Error\n\n", error);
-        throw "Sorry we could not get the complete wallet. Try again";
+        throw new Error("Sorry we could not get the complete wallet. Try again");
       });
     return wallet;
   }
 
-  get(discordId: number) {
+  get(memberId: number) {
     const wallet = this.prisma.wallet
-      .findUnique({ where: { discordId: discordId }, rejectOnNotFound: true })
+      .findUnique({ where: { memberId: memberId }, rejectOnNotFound: true })
       .catch((error) => {
         console.error("Get Wallet Error\n\n", error);
         throw "Sorry we could not get the wallet. Try again";
@@ -52,44 +52,34 @@ export default class WalletController {
     return wallet;
   }
 
-  fundsAvailable(record: Wallet, amount: number): boolean {
-    if (record.balance < amount) {
-      throw "Sorry you do not have the funds to withdraw that amount. Check your balance";
-    }
-    return true;
-  }
-
-  updateBalance(account: Wallet, amount: number, withdraw: boolean) {
-    let newBalance: number;
+  updateBalance(memberId: number, amount: number, withdraw: boolean) {
+    let newRecord: Promise<Wallet>;
     if (withdraw) {
-      newBalance = account.balance - amount;
-    } else {
-      newBalance = account.balance + amount;
-    }
-    const newRecord = this.prisma.wallet
-      .update({
-        where: { discordId: account.discordId },
+      newRecord = this.prisma.wallet.update({
+        where: { memberId: memberId },
         data: {
-          balance: newBalance,
+          balance: {
+            decrement: amount,
+          },
         },
-      })
-      .catch((error) => {
-        console.error("Update Balance Error\n\n", error);
-        throw "The update could not be completed try again";
       });
+    } else {
+      newRecord = this.prisma.wallet.update({
+        where: { memberId: memberId },
+        data: {
+          balance: {
+            increment: amount,
+          },
+        },
+      });
+    }
+    newRecord.catch((error) => {
+      console.error("Update Balance Error\n\n", error);
+      throw "The update could not be completed try again";
+    });
 
     return newRecord;
   }
 }
 
-//FIXME: the functionare assuming client facing
-/**
- * Admin dont need their balance checked when updating accounts. I.E when
- * depositing into accounts or removing from accounts. Isolate the checking to a possible
- * helper function or re do this.
- *
- * Consider using .then with the functions to gain greater variability in how we pipe together
- * prisma calls
- */
-
-//TODO: use the increment and decrement of update to update
+//TODO: if no wallet found, creat the wallet

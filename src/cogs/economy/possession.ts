@@ -10,14 +10,11 @@ export default class PossessionController {
     this.prisma = prisma;
   }
 
-  getPossessions(discordId: number) {
+  getPossessions(memberId: number) {
     const possessions = this.prisma.possession
       .findMany({
         where: {
-          userDiscordId: discordId,
-        },
-        include: {
-          item: true,
+          ownerId: memberId,
         },
       })
       .catch((error) => {
@@ -28,10 +25,10 @@ export default class PossessionController {
     return possessions;
   }
 
-  getPossession(discordId: number, itemId: number) {
+  getPossession(memberId: number, itemName: string) {
     const possession = this.prisma.possession
       .findFirst({
-        where: { userDiscordId: discordId, itemId: itemId },
+        where: { ownerId: memberId, itemName: itemName },
       })
       .catch((error) => {
         console.error("Get Possession Error\n\n", error);
@@ -41,16 +38,16 @@ export default class PossessionController {
     return possession;
   }
 
-  updateStock(item: Possession, amount: number, remove: boolean) {
+  updateStock(itemName: string, memberId: number, amount: number, remove: boolean) {
     let updatedPossession: Promise<Possession>;
     if (remove) {
       updatedPossession = this.prisma.possession.update({
-        where: { id: item.id },
+        where: { ownerId_itemName: { itemName: itemName, ownerId: memberId } },
         data: { stock: { decrement: amount } },
       });
     } else {
       updatedPossession = this.prisma.possession.update({
-        where: { id: item.id },
+        where: { ownerId_itemName: { itemName: itemName, ownerId: memberId } },
         data: { stock: { increment: amount } },
       });
     }

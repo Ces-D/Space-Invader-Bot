@@ -50,8 +50,10 @@ export default class CommandControl {
           this.Economy.depositCommand(message);
           break;
         case AdminEconomyCmds.LIST:
+          this.Economy.listWalletCommand(message)
           break;
         case AdminEconomyCmds.REMOVE:
+          this.Economy.removePossessionCommand(message)
           break;
         case AdminEconomyCmds.WITHDRAW:
           this.Economy.withdrawCommand(message);

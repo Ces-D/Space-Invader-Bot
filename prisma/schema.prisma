@@ -28,10 +28,11 @@ model Item {
 }
 
 model Possession {
-  id       Int    @id @default(autoincrement())
   owner    Wallet @relation(fields: [ownerId], references: [memberId])
   item     Item   @relation(fields: [itemName], references: [name])
   stock    Int
   ownerId  Int
   itemName String
+
+  @@id([ownerId, itemName])
 }
