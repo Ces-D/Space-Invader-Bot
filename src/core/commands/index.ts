@@ -4,7 +4,7 @@ import Economy from "../../cogs/Economy";
 import { UserEconomyCmds, AdminEconomyCmds } from "../../cogs/Economy/commands";
 
 export default class CommandControl {
-  protected PRIMARY_PREFIX = "$";
+  protected PRIMARY_PREFIX = "!";
   readonly Economy: Economy;
 
   constructor(client: Client, prisma: PrismaClient) {
@@ -32,6 +32,9 @@ export default class CommandControl {
     if (this.isAdmissableMessage(message)) {
       const command = this.parseForCommand(message);
       switch (command) {
+        case UserEconomyCmds.CREATE_WALLET:
+          this.Economy.createCommand(message);
+          break;
         case UserEconomyCmds.BALANCE:
           this.Economy.balanceCommand(message);
           break;
@@ -49,11 +52,11 @@ export default class CommandControl {
         case AdminEconomyCmds.DEPOSIT:
           this.Economy.depositCommand(message);
           break;
-        case AdminEconomyCmds.LIST:
-          this.Economy.listWalletCommand(message)
+        case AdminEconomyCmds.SUMMARY:
+          this.Economy.listWalletCommand(message);
           break;
         case AdminEconomyCmds.REMOVE:
-          this.Economy.removePossessionCommand(message)
+          this.Economy.removePossessionCommand(message);
           break;
         case AdminEconomyCmds.WITHDRAW:
           this.Economy.withdrawCommand(message);

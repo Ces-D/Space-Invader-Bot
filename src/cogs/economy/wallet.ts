@@ -1,5 +1,6 @@
 import { PrismaClient, Wallet } from "@prisma/client";
 import { Client } from "discord.js";
+import { REQUEST_ERROR } from "./commands";
 
 export default class WalletController {
   readonly client: Client;
@@ -11,52 +12,18 @@ export default class WalletController {
     this.prisma = prisma;
   }
 
-  create(memberId: number, tag: string) {
-    const wallet = this.prisma.wallet
-      .create({
-        data: {
-          memberId: memberId,
-          userTag: tag,
-          balance: this.STARTING_BALANCE,
-        },
-      })
-      .catch((error) => {
-        console.error("Create Wallet Error: ", error);
-        throw "Sorry your balance could not be created. Try again";
-      });
-
-    return wallet;
-  }
-
-  getComplete(memberId: number) {
-    const wallet = this.prisma.wallet
-      .findUnique({
-        where: { memberId: memberId },
-        rejectOnNotFound: true,
-        include: { Possession: true },
-      })
-      .catch((error) => {
-        console.error("Complete Wallet Error\n\n", error);
-        throw new Error("Sorry we could not get the complete wallet. Try again");
-      });
-    return wallet;
-  }
-
-  get(memberId: number) {
-    const wallet = this.prisma.wallet
-      .findUnique({ where: { memberId: memberId }, rejectOnNotFound: true })
-      .catch((error) => {
-        console.error("Get Wallet Error\n\n", error);
-        throw "Sorry we could not get the wallet. Try again";
-      });
-    return wallet;
-  }
-
-  updateBalance(memberId: number, amount: number, withdraw: boolean) {
+  /**
+   *
+   * @param userId User.id and not GuildMember.id
+   * @param amount Schmeckle amount
+   * @param withdraw Boolean indicating a withdrawal or deposit
+   * @returns Wallet
+   */
+  updateBalance(userId: number, amount: number, withdraw: boolean) {
     let newRecord: Promise<Wallet>;
     if (withdraw) {
       newRecord = this.prisma.wallet.update({
-        where: { memberId: memberId },
+        where: { userId: userId },
         data: {
           balance: {
             decrement: amount,
@@ -65,7 +32,7 @@ export default class WalletController {
       });
     } else {
       newRecord = this.prisma.wallet.update({
-        where: { memberId: memberId },
+        where: { userId: userId },
         data: {
           balance: {
             increment: amount,
@@ -75,11 +42,33 @@ export default class WalletController {
     }
     newRecord.catch((error) => {
       console.error("Update Balance Error\n\n", error);
-      throw "The update could not be completed try again";
+      throw REQUEST_ERROR;
     });
 
     return newRecord;
   }
-}
 
-//TODO: if no wallet found, creat the wallet
+  /**
+   *
+   * @param userId User.id, not GuildMember.id
+   * @param include Boolean requesting Possessions
+   * @returns Wallet
+   */
+  findOrCreate(userId: string, include: boolean = false) {
+    const id = parseInt(userId);
+    const wallet = this.prisma.wallet
+      .upsert({
+        where: { userId: id },
+        create: { userId: id, balance: this.STARTING_BALANCE },
+        update: {},
+        include: {
+          Possession: include,
+        },
+      })
+      .catch((error) => {
+        console.error("Find or Create Error\n\n", error);
+        throw REQUEST_ERROR;
+      });
+    return wallet;
+  }
+}

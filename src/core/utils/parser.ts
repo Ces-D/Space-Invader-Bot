@@ -18,13 +18,14 @@ export const parseForArguments = (
 ) => {
   let args: Arguments = {};
   const cleanedMsg = message.content.toLowerCase().trim().split(" ").slice(1);
-  if (requiresMention) {
-    if (message.mentions.members?.first(1).length === 1) {
-      args["member"] = message.mentions.members.first();
-    } else {
-      throw "You are missing arguments. Try again";
-    }
+  if (requiresMention == true && message.mentions.members?.first() !== undefined) {
+    // if true and have
+    args["member"] = message.mentions.members.first();
+  } else if (requiresMention == true && message.mentions.members?.first() === undefined) {
+    // if true and not have
+    throw "You are missing arguments. Try again";
   }
+
   // loop through message and grab only the values that are in the subCmds array
   cleanedMsg.forEach((m) => {
     const halves = m.split("=");
@@ -43,6 +44,11 @@ export const hasAdminPermissions = (member: GuildMember | null): boolean => {
     return isAdmin;
   }
   return false;
+};
+
+export const isMember = (message: Message) => {
+  const status = message.member !== null ? true : false;
+  return status;
 };
 
 export const argumentsFulfilled = (

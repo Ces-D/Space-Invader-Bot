@@ -8,8 +8,16 @@ import {
 import Item from "./item";
 import Possession from "./possession";
 import Wallet from "./wallet";
-import { EconomySubCmds, MISSING_ARGUMENTS_ERROR } from "./commands";
-import { embedTable } from "../../core/utils/embeds";
+import {
+  CREATE_WALLET_SUCCESS,
+  EconomySubCmds,
+  AdminEconomyCmds,
+  GET_BALANCE_SUCCESS,
+  UPDATE_BALANCE_SUCCESS,
+  MISSING_ARGUMENTS_ERROR,
+  CREATE_ITEM_SUCCESS,
+  REMOVE_POSSESSION_SUCCESS,
+} from "./commands";
 
 export default class Economy {
   readonly Wallet: Wallet;
@@ -23,27 +31,19 @@ export default class Economy {
   }
 
   createCommand(message: Message) {
-    const subCmds: [] = [];
-    const args = parseForArguments(message, true, subCmds);
-    if (argumentsFulfilled(args, subCmds, true)) {
-      const discordId = (args["member"] && parseInt(args["member"].id)) || 0; //FIXME
-
-      this.Wallet.create(discordId, message.author.username)
-        .then((wallet) => {
-          message.reply(
-            `Congrats. You can now purchase items using $merchandise command. You balance is ${wallet.balance} Schmeckle(s)`
-          );
-        })
-        .catch((error) => {
-          message.reply(error);
-        });
-    }
-  } // FIXME: somehow I am missing arguments
+    this.Wallet.findOrCreate(message.author.id)
+      .then((wallet) => {
+        message.reply(CREATE_WALLET_SUCCESS(wallet.balance));
+      })
+      .catch((error) => {
+        message.reply(error);
+      });
+  }
 
   balanceCommand(message: Message) {
-    this.Wallet.get(parseInt(message.author.id))
-      .then((w) => {
-        message.reply(`You have ${w.balance} Schmeckle(s)`);
+    this.Wallet.findOrCreate(message.author.id)
+      .then((wallet) => {
+        message.reply(GET_BALANCE_SUCCESS(wallet.balance));
       })
       .catch((error) => {
         message.reply(error);
@@ -55,49 +55,52 @@ export default class Economy {
       const subCmds = [EconomySubCmds.AMOUNT];
       const args = parseForArguments(message, true, subCmds);
       if (argumentsFulfilled(args, subCmds, true)) {
-        const discordId = (args["member"] && parseInt(args["member"].id)) || 0; // FIXME: This should not throw error. RN it might
+        const userId = (args["member"] && parseInt(args["member"].user.id)) || 0; //FIXME all requests of userId
 
-        this.Wallet.updateBalance(discordId, args[EconomySubCmds.AMOUNT], false)
+        this.Wallet.updateBalance(userId, parseInt(args[EconomySubCmds.AMOUNT]), false)
           .then((updatedAccount) => {
-            message.reply(
-              `The transfer was complete. ${updatedAccount.userTag}'s balance is now ${updatedAccount.balance} Schmeckle(s)`
-            );
+            message.reply(UPDATE_BALANCE_SUCCESS(updatedAccount.balance, false));
           })
           .catch((error) => {
             message.reply(error);
           });
       } else {
-        message.reply(MISSING_ARGUMENTS_ERROR);
+        message.reply(
+          MISSING_ARGUMENTS_ERROR(
+            `${AdminEconomyCmds.DEPOSIT} ${EconomySubCmds.AMOUNT}=<number> <mention>`
+          )
+        );
       }
     }
     return; // ignore msg
   }
 
-  //TODO: test this
   withdrawCommand(message: Message) {
     if (hasAdminPermissions(message.member)) {
       const subCmds = [EconomySubCmds.AMOUNT];
       const args = parseForArguments(message, true, subCmds);
       if (argumentsFulfilled(args, subCmds, true)) {
-        const discordId = (args["member"] && parseInt(args["member"].id)) || 0; // FIXME: This should not throw error. RN it might
+        const userId = (args["member"] && parseInt(args["member"].user.id)) || 0;
 
-        this.Wallet.updateBalance(discordId, args[EconomySubCmds.AMOUNT], true)
+        this.Wallet.updateBalance(userId, args[EconomySubCmds.AMOUNT], true)
           .then((updatedAccount) => {
-            message.reply(
-              `The transfer was complete. ${updatedAccount.userTag}'s balance is now ${updatedAccount.balance} Schmeckle(s)`
-            );
+            message.reply(UPDATE_BALANCE_SUCCESS(updatedAccount.balance, true));
           })
           .catch((error) => {
             message.reply(error);
           });
       } else {
-        message.reply(MISSING_ARGUMENTS_ERROR);
+        message.reply(
+          MISSING_ARGUMENTS_ERROR(
+            `${AdminEconomyCmds.WITHDRAW} ${EconomySubCmds.AMOUNT}=<number> <mention>`
+          )
+        );
       }
     }
     return; // ignore msg
   }
 
-  //TODO: test this
+  //FIXME: convert args[stock,price] to ints
   createItemCommand(message: Message) {
     if (hasAdminPermissions(message.member)) {
       const subCmds = [EconomySubCmds.ITEM, EconomySubCmds.PRICE, EconomySubCmds.STOCK];
@@ -110,118 +113,109 @@ export default class Economy {
         )
           .then((newItem) => {
             message.reply(
-              `Item: ${newItem.name} is available at ${newItem.price} Schmeckle(s). Only ${newItem.stock} are available`
+              CREATE_ITEM_SUCCESS(newItem.name, newItem.price, newItem.stock)
             );
           })
           .catch((error) => {
             message.reply(error);
           });
       } else {
-        message.reply(MISSING_ARGUMENTS_ERROR);
+        message.reply(
+          MISSING_ARGUMENTS_ERROR(
+            `${AdminEconomyCmds.CREATE} ${EconomySubCmds.ITEM}=<string> ${EconomySubCmds.PRICE}=<number> ${EconomySubCmds.STOCK}=<number>`
+          )
+        );
       }
     }
     return; // ignore msg
   }
 
-  //TODO: test this
   getPossessionsCommand(message: Message) {
     this.Possession.getPossessions(parseInt(message.author.id))
       .then((possessions) => {
-        let data: string[][] = [];
+        let data: string[] = [];
+
+        data.push("~~ Possessions List ~~");
         possessions.forEach((possession) => {
-          const instance = [possession.itemName, possession.stock.toString()];
+          const instance = `Item: ${possession.itemName} | Stock: ${possession.stock}`;
           data.push(instance);
         });
-        const embeddedItem = embedTable(
-          data,
-          "Dark Grey",
-          ["Name", "Stock"],
-          "Your Possessions"
-        );
-        message.reply(embeddedItem);
+        message.reply(data);
       })
       .catch((error) => {
         message.reply(error);
       });
   }
 
-  //TODO: test this
   getMerchandiseCommand(message: Message) {
     this.Item.getAll()
       .then((allItems) => {
-        let data: string[][] = [];
+        let data: string[] = [];
+
+        data.push("~~~ Guild Merchandise List ~~~");
         allItems.forEach((item) => {
-          const instance = [item.name, item.stock.toString(), item.price.toString()];
+          const instance = `Item: ${item.name} | Stock: ${item.stock} | Price: ${item.price}`;
           data.push(instance);
         });
-        const embeddedItem = embedTable(
-          data,
-          "DARK_GOLD",
-          ["Name", "Stock", "Price"],
-          "Merchandise Available"
-        );
 
-        message.reply(embeddedItem);
+        message.reply(data);
       })
       .catch((error) => {
         message.reply(error);
       });
-  } //FIXME the embeds are fucked up
+  }
 
   removePossessionCommand(message: Message) {
     if (hasAdminPermissions(message.member)) {
       const subCmds = [EconomySubCmds.ITEM, EconomySubCmds.AMOUNT];
       const args = parseForArguments(message, true, subCmds);
       if (argumentsFulfilled(args, subCmds, true)) {
-        const discordId = (args["member"] && parseInt(args["member"].id)) || 0; //FIXME
+        const userId = (args["member"] && parseInt(args["member"].user.id)) || 0;
 
         this.Possession.updateStock(
           args[EconomySubCmds.ITEM],
-          discordId,
+          userId,
           args[EconomySubCmds.AMOUNT],
           true
         )
           .then((possession) => {
             message.reply(
-              `Reduced the stock of ${possession.itemName} to ${possession.stock}`
+              REMOVE_POSSESSION_SUCCESS(possession.itemName, possession.stock)
             );
           })
           .catch((error) => {
             message.reply(error);
           });
+      } else {
+        message.reply(
+          MISSING_ARGUMENTS_ERROR(
+            `${AdminEconomyCmds.REMOVE} ${EconomySubCmds.ITEM}=<string> ${EconomySubCmds.AMOUNT}=<number> <mention>`
+          )
+        );
       }
     }
     return; //ignore msg
   }
 
-  // TODO: test this
   listWalletCommand(message: Message) {
     if (hasAdminPermissions(message.member)) {
       const subCmds: [] = [];
       const args = parseForArguments(message, true, subCmds);
       if (argumentsFulfilled(args, subCmds, true)) {
-        const discordId = (args["member"] && parseInt(args["member"].id)) || 0; // FIXME: This should not throw error. RN it might
+        const userId = (args["member"] && args["member"].user.id) || "0";
 
-        let possessionData: string[][] = [];
-        this.Wallet.getComplete(discordId).then((wallet) => {
+        let data: string[] = [];
+        this.Wallet.findOrCreate(userId, true).then((wallet) => {
+          data.push("~~~ Wallet Summary ~~~");
+          data.push(`Balance: ${wallet.balance}`);
           wallet.Possession.forEach((possession) => {
-            const instance = [possession.itemName, possession.stock.toString()];
-            possessionData.push(instance);
+            const instance = `Item: ${possession.itemName} | Stock: ${possession.stock} `;
+            data.push(instance);
           });
-
-          const embeddedItem = embedTable(
-            possessionData,
-            "RANDOM",
-            ["Name", "Stock"],
-            `${wallet.userTag} Possession(s)`
-          );
-
-          message.reply(
-            `${wallet.userTag} has a balance of ${wallet.balance} Schmeckle(s)\n${embeddedItem}`
-          );
+          message.reply(data);
         });
       } else {
-        message.reply(MISSING_ARGUMENTS_ERROR);
+        message.reply(MISSING_ARGUMENTS_ERROR(`${AdminEconomyCmds.SUMMARY} <mention>`));
       }
     }
     return; // ignore msg
