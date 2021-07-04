@@ -1,6 +1,6 @@
 {
    "compilerOptions": {
-      "target": "ES3",
+      "target": "es3",
       "skipLibCheck": true,
       "strict": true,
       "removeComments": true,

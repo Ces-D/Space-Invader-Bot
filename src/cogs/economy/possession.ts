@@ -38,17 +38,17 @@ export default class PossessionController {
     return possession;
   }
 
-  updateStock(itemName: string, memberId: number, amount: number, remove: boolean) {
+  updateStock(itemName: string, userId: number, amount: string, remove: boolean) {
     let updatedPossession: Promise<Possession>;
     if (remove) {
       updatedPossession = this.prisma.possession.update({
-        where: { ownerId_itemName: { itemName: itemName, ownerId: memberId } },
-        data: { stock: { decrement: amount } },
+        where: { ownerId_itemName: { itemName: itemName, ownerId: userId } },
+        data: { stock: { decrement: parseInt(amount) } },
       });
     } else {
       updatedPossession = this.prisma.possession.update({
-        where: { ownerId_itemName: { itemName: itemName, ownerId: memberId } },
-        data: { stock: { increment: amount } },
+        where: { ownerId_itemName: { itemName: itemName, ownerId: userId } },
+        data: { stock: { increment: parseInt(amount) } },
       });
     }
     updatedPossession.catch((error) => {

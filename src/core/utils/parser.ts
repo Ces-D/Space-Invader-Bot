@@ -23,7 +23,7 @@ export const parseForArguments = (
     args["member"] = message.mentions.members.first();
   } else if (requiresMention == true && message.mentions.members?.first() === undefined) {
     // if true and not have
-    throw "You are missing arguments. Try again";
+    args["member"] = undefined;
   }
 
   // loop through message and grab only the values that are in the subCmds array

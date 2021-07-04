@@ -10,13 +10,13 @@ export default class Item {
     this.prisma = prisma;
   }
 
-  create(name: string, price: number, stock: number) {
+  create(name: string, price: string, stock: string) {
     const newItem = this.prisma.item
       .create({
         data: {
           name: name,
-          price: price,
-          stock: stock,
+          price: parseInt(price),
+          stock: parseInt(stock),
         },
       })
       .catch((error) => {
@@ -36,15 +36,37 @@ export default class Item {
 
   get(name: string) {
     const item = this.prisma.item
-      .findFirst({
+      .findUnique({
         where: {
           name: name,
         },
+        rejectOnNotFound: true,
       })
       .catch((error) => {
         console.error("Get Item Error\n\n", error);
         throw "Could not get the Item";
       });
     return item;
+  }
+
+  updateStock(name: string, amount: string, increase: boolean) {
+    let updatedItem;
+    if (increase) {
+      updatedItem = this.prisma.item.update({
+        where: { name: name },
+        data: {
+          stock: { increment: parseInt(amount) },
+        },
+      });
+    } else {
+      updatedItem = this.prisma.item.update({
+        where: { name: name },
+        data: { stock: { decrement: parseInt(amount) } },
+      });
+    }
+    updatedItem.catch((error) => {
+      console.error("Update Item Error\n\n", error);
+    });
+    return updatedItem;
   }
 }

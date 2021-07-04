@@ -17,6 +17,9 @@ import {
   MISSING_ARGUMENTS_ERROR,
   CREATE_ITEM_SUCCESS,
   REMOVE_POSSESSION_SUCCESS,
+  UserEconomyCmds,
+  INSUFFICIENT_FUNDS,
+  INSUFFICIENT_ITEMS,
 } from "./commands";
 
 export default class Economy {
@@ -30,6 +33,7 @@ export default class Economy {
     this.Possession = new Possession(client, prisma);
   }
 
+  //FIXME: send a different message if the wallet is already created
   createCommand(message: Message) {
     this.Wallet.findOrCreate(message.author.id)
       .then((wallet) => {
@@ -57,7 +61,7 @@ export default class Economy {
       if (argumentsFulfilled(args, subCmds, true)) {
         const userId = (args["member"] && parseInt(args["member"].user.id)) || 0; //FIXME all requests of userId
 
-        this.Wallet.updateBalance(userId, parseInt(args[EconomySubCmds.AMOUNT]), false)
+        this.Wallet.updateBalance(userId, args[EconomySubCmds.AMOUNT], false)
           .then((updatedAccount) => {
             message.reply(UPDATE_BALANCE_SUCCESS(updatedAccount.balance, false));
           })
@@ -100,7 +104,6 @@ export default class Economy {
     return; // ignore msg
   }
 
-  //FIXME: convert args[stock,price] to ints
   createItemCommand(message: Message) {
     if (hasAdminPermissions(message.member)) {
       const subCmds = [EconomySubCmds.ITEM, EconomySubCmds.PRICE, EconomySubCmds.STOCK];
@@ -129,15 +132,15 @@ export default class Economy {
     }
     return; // ignore msg
   }
-
+  //TODO: continue here
   getPossessionsCommand(message: Message) {
     this.Possession.getPossessions(parseInt(message.author.id))
       .then((possessions) => {
         let data: string[] = [];
 
-        data.push("~~ Possessions List ~~");
+        data.push("**Possessions List**");
         possessions.forEach((possession) => {
-          const instance = `Item: ${possession.itemName} | Stock: ${possession.stock}`;
+          const instance = `Item: ${possession.itemName}   |   Stock: ${possession.stock}`;
           data.push(instance);
         });
         message.reply(data);
@@ -152,9 +155,9 @@ export default class Economy {
       .then((allItems) => {
         let data: string[] = [];
 
-        data.push("~~~ Guild Merchandise List ~~~");
+        data.push("**Guild Merchandise List**");
         allItems.forEach((item) => {
-          const instance = `Item: ${item.name} | Stock: ${item.stock} | Price: ${item.price}`;
+          const instance = `Item: ${item.name}   |   Stock: ${item.stock}   |   Price: ${item.price}`;
           data.push(instance);
         });
 
@@ -197,7 +200,7 @@ export default class Economy {
     return; //ignore msg
   }
 
-  listWalletCommand(message: Message) {
+  summaryWalletCommand(message: Message) {
     if (hasAdminPermissions(message.member)) {
       const subCmds: [] = [];
       const args = parseForArguments(message, true, subCmds);
@@ -206,10 +209,10 @@ export default class Economy {
 
         let data: string[] = [];
         this.Wallet.findOrCreate(userId, true).then((wallet) => {
-          data.push("~~~ Wallet Summary ~~~");
+          data.push("**Wallet Summary**");
           data.push(`Balance: ${wallet.balance}`);
           wallet.Possession.forEach((possession) => {
-            const instance = `Item: ${possession.itemName} | Stock: ${possession.stock} `;
+            const instance = `Item: ${possession.itemName}   |   Stock: ${possession.stock} `;
             data.push(instance);
           });
           message.reply(data);
@@ -219,5 +222,80 @@ export default class Economy {
       }
     }
     return; // ignore msg
+  }
+
+  async purchaseItems(message: Message) {
+    const subCmds = [EconomySubCmds.ITEM, EconomySubCmds.AMOUNT];
+    const args = parseForArguments(message, false, subCmds);
+    if (argumentsFulfilled(args, subCmds, false)) {
+      const itemName = args[EconomySubCmds.ITEM];
+      const amountAsked = args[EconomySubCmds.AMOUNT];
+      const buyerBalance = (await this.Wallet.findOrCreate(message.author.id, false))
+        .balance;
+      const item = await this.Item.get(itemName);
+      // not enough items
+      if (parseInt(amountAsked) < item.stock) {
+        message.reply(INSUFFICIENT_ITEMS(parseInt(amountAsked), itemName));
+      }
+      // not enough funds
+      if (buyerBalance < amountAsked * item.price) {
+        message.reply(INSUFFICIENT_FUNDS);
+      }
+      // You are ready to buy
+      try {
+        await this.Item.updateStock(itemName, amountAsked, false);
+        await this.Wallet.updateBalance(
+          parseInt(message.author.id),
+          (amountAsked * item.price).toString(),
+          true
+        );
+        this.Possession.updateStock(
+          itemName,
+          parseInt(message.author.id),
+          amountAsked,
+          false
+        );
+        message.reply(`Success. You bought ${amountAsked} ${itemName}`);
+      } catch (error) {
+        console.error("Error with Transaction: ", error);
+        message.reply(
+          "Error happened. Check you balance and possessions. Something might have happened. contact admin"
+        );
+      }
+    } else {
+      message.reply(
+        MISSING_ARGUMENTS_ERROR(
+          `${UserEconomyCmds.PURCHASE} ${EconomySubCmds.ITEM}=<string> ${EconomySubCmds.AMOUNT}=<number>`
+        )
+      );
+    }
+  } // TODO: test and add to commands
+
+  listCommands(message: Message) {
+    let commands: string[] = [];
+    if (hasAdminPermissions(message.member)) {
+      commands.push(
+        `Command: ${AdminEconomyCmds.CREATE}   |   Arguments: ${EconomySubCmds.ITEM}, ${EconomySubCmds.PRICE}, ${EconomySubCmds.PRICE}`
+      );
+      commands.push(
+        `Command: ${AdminEconomyCmds.DEPOSIT}   |   Arguments: mention, ${EconomySubCmds.AMOUNT}`
+      );
+      commands.push(
+        `Command: ${AdminEconomyCmds.WITHDRAW}   |   Arguments: mention, ${EconomySubCmds.AMOUNT}`
+      );
+      commands.push(
+        `Command: ${AdminEconomyCmds.REMOVE}   |   Arguments: mention, ${EconomySubCmds.ITEM}, ${EconomySubCmds.AMOUNT}`
+      );
+      commands.push(`Command: ${AdminEconomyCmds.SUMMARY}   |   Arguments: mention`);
+    }
+    commands.push(`Command: ${UserEconomyCmds.BALANCE}   |   Arguments: none`);
+    commands.push(`Command: ${UserEconomyCmds.POSSESSIONS}   |   Arguments: none`);
+    commands.push(`Command: ${UserEconomyCmds.MERCHANDISE}   |   Arguments: none`);
+    //TODO: finish purchase
+    commands.push(
+      `Command: ${UserEconomyCmds.PURCHASE}   |   Arguments: ${EconomySubCmds.ITEM}, ${EconomySubCmds.PRICE}, ${EconomySubCmds.PRICE}`
+    );
+    commands.push(`Command: ${UserEconomyCmds.CREATE_WALLET}   |   Arguments: none`);
+    message.reply(commands);
   }
 }

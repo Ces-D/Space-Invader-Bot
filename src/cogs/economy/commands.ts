@@ -1,9 +1,14 @@
 // ("$deposit amount=10 @ces");
+const CURRENCY = "Schmeckle(s)";
 
 export const MISSING_ARGUMENTS_ERROR = (format: string) => {
   return ["You are missing arguments", `Try this: !${format}`];
 };
 export const REQUEST_ERROR = "Error fulfilling the request. Try again";
+
+export const INSUFFICIENT_FUNDS = `You do not have the funds. Get some ${CURRENCY} Oliver Twist!`;
+export const INSUFFICIENT_ITEMS = (amountRequested: number, itemRequested: string) =>
+  `There are not enough ${itemRequested} in stock to purchase ${amountRequested}`;
 
 export const GET_BALANCE_SUCCESS = (balance: number) => {
   return `Your balance is ${balance} ${CURRENCY}`;
@@ -34,15 +39,13 @@ export const REMOVE_POSSESSION_SUCCESS = (name: string, stock: number) => {
   return [`${name} were successfully removed.`, `They now own ${stock}`];
 };
 
-const CURRENCY = "Schmeckle(s)";
-
 export enum UserEconomyCmds {
   BALANCE = "balance", // check their balance
   POSSESSIONS = "possessions", // check their possessions
   MERCHANDISE = "merchandise", // check the guilds purchasable merchandise
-  PURCHASE = "purchase", // purchase merchandise from bot or member //TODO
+  PURCHASE = "purchase", // purchase merchandise from bot //TODO
   CREATE_WALLET = "create", // create your wallet with starting
-  LIST = "economy-ls", // list all the economy commands //TODO
+  LIST = "economy", // list all the economy commands //TODO
 }
 
 export enum AdminEconomyCmds {

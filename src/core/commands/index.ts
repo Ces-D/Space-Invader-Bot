@@ -32,6 +32,9 @@ export default class CommandControl {
     if (this.isAdmissableMessage(message)) {
       const command = this.parseForCommand(message);
       switch (command) {
+        case UserEconomyCmds.LIST:
+          this.Economy.listCommands(message);
+          break;
         case UserEconomyCmds.CREATE_WALLET:
           this.Economy.createCommand(message);
           break;
@@ -53,7 +56,7 @@ export default class CommandControl {
           this.Economy.depositCommand(message);
           break;
         case AdminEconomyCmds.SUMMARY:
-          this.Economy.listWalletCommand(message);
+          this.Economy.summaryWalletCommand(message);
           break;
         case AdminEconomyCmds.REMOVE:
           this.Economy.removePossessionCommand(message);

@@ -19,24 +19,20 @@ export default class WalletController {
    * @param withdraw Boolean indicating a withdrawal or deposit
    * @returns Wallet
    */
-  updateBalance(userId: number, amount: number, withdraw: boolean) {
+  updateBalance(userId: number, amount: string, withdraw: boolean) {
     let newRecord: Promise<Wallet>;
     if (withdraw) {
       newRecord = this.prisma.wallet.update({
         where: { userId: userId },
         data: {
-          balance: {
-            decrement: amount,
-          },
+          balance: { decrement: parseInt(amount) },
         },
       });
     } else {
       newRecord = this.prisma.wallet.update({
         where: { userId: userId },
         data: {
-          balance: {
-            increment: amount,
-          },
+          balance: { increment: parseInt(amount) },
         },
       });
     }
@@ -71,4 +67,6 @@ export default class WalletController {
       });
     return wallet;
   }
+
+  
 }
