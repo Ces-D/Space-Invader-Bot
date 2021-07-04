@@ -1,115 +1,72 @@
-import { PrismaClient } from ".prisma/client";
-import { GuildMember } from "discord.js";
-import Possession from "./possession";
+import { PrismaClient, Wallet } from "@prisma/client";
+import { Client } from "discord.js";
+import { REQUEST_ERROR } from "./commands";
 
-export default class Wallet extends Possession {
+export default class WalletController {
+  readonly client: Client;
   readonly prisma: PrismaClient;
   private STARTING_BALANCE = 10;
 
-  constructor(prisma: PrismaClient) {
-    super(prisma);
+  constructor(client: Client, prisma: PrismaClient) {
+    this.client = client;
     this.prisma = prisma;
   }
 
-  private async createWallet(member: GuildMember): Promise<void> {
-    await this.prisma.wallet.create({
-      data: {
-        discordId: parseInt(member.id),
-        userTag: member.displayName,
-        balance: this.STARTING_BALANCE,
-      },
-    });
-  }
-
-  private async withdrawFunds(
-    member: GuildMember,
-    amount: number,
-    cachedBalance?: number
-  ) {
-    let balance;
-    if (cachedBalance) {
-      balance = cachedBalance;
+  /**
+   *
+   * @param userId User.id and not GuildMember.id
+   * @param amount Schmeckle amount
+   * @param withdraw Boolean indicating a withdrawal or deposit
+   * @returns Wallet
+   */
+  updateBalance(userId: number, amount: string, withdraw: boolean) {
+    let newRecord: Promise<Wallet>;
+    if (withdraw) {
+      newRecord = this.prisma.wallet.update({
+        where: { userId: userId },
+        data: {
+          balance: { decrement: parseInt(amount) },
+        },
+      });
     } else {
-      balance = await this.getBalance(member);
+      newRecord = this.prisma.wallet.update({
+        where: { userId: userId },
+        data: {
+          balance: { increment: parseInt(amount) },
+        },
+      });
     }
-
-    this.prisma.wallet.update({
-      where: { discordId: parseInt(member.id) },
-      data: { balance: balance - amount },
-    });
-    return;
-  }
-
-  async getBalance(member: GuildMember): Promise<number> {
-    const wallet = await this.prisma.wallet.findFirst({
-      where: {
-        discordId: parseInt(member.id),
-      },
+    newRecord.catch((error) => {
+      console.error("Update Balance Error\n\n", error);
+      throw REQUEST_ERROR;
     });
 
-    let balance;
-    if (wallet) {
-      balance = wallet.balance;
-    } else {
-      this.createWallet(member);
-      balance = this.STARTING_BALANCE;
-    }
-
-    return balance;
+    return newRecord;
   }
 
-  async depositFunds(
-    member: GuildMember,
-    amount: number,
-    cachedBalance?: number
-  ): Promise<number> {
-    let balance;
-    if (cachedBalance) {
-      balance = cachedBalance;
-    } else {
-      balance = await this.getBalance(member);
-    }
-
-    const newBalance = await this.prisma.wallet.update({
-      where: { discordId: parseInt(member.id) },
-      data: { balance: balance + amount },
-    });
-
-    return newBalance.balance;
+  /**
+   *
+   * @param userId User.id, not GuildMember.id
+   * @param include Boolean requesting Possessions
+   * @returns Wallet
+   */
+  findOrCreate(userId: string, include: boolean = false) {
+    const id = parseInt(userId);
+    const wallet = this.prisma.wallet
+      .upsert({
+        where: { userId: id },
+        create: { userId: id, balance: this.STARTING_BALANCE },
+        update: {},
+        include: {
+          Possession: include,
+        },
+      })
+      .catch((error) => {
+        console.error("Find or Create Error\n\n", error);
+        throw REQUEST_ERROR;
+      });
+    return wallet;
   }
 
-  transferFunds(
-    fromWallet: GuildMember,
-    toWallet: GuildMember,
-    amount: number,
-    cachedFromBalance?: number,
-    cachedToBalance?: number
-  ): boolean {
-    let fromBalance, toBalance;
-
-    if (cachedFromBalance) {
-      fromBalance = cachedFromBalance;
-    } else {
-      fromBalance = this.getBalance(fromWallet);
-    }
-
-    if (cachedToBalance) {
-      toBalance = cachedToBalance;
-    } else {
-      toBalance = this.getBalance(toWallet);
-    }
-
-    if (fromBalance < amount) {
-      return false;
-    }
-
-    this.depositFunds(toWallet, amount, cachedToBalance);
-    this.withdrawFunds(fromWallet, amount, cachedFromBalance);
-
-    return true;
-  }
+  
 }
-
-
-//TODO: test the created functions
-// TODO: if any failure rollback in transferFunds

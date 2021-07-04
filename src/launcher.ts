@@ -1,38 +1,34 @@
 import { PrismaClient } from "@prisma/client";
 import { Client, Constants } from "discord.js";
 import { config } from "dotenv";
-import CommandHandler from "./core/commands";
+import CommandControl from "./core/commands";
 
 config();
-export const prisma = new PrismaClient();
 
 const main = () => {
+  const prisma = new PrismaClient();
   const client = new Client();
-  const commandHandler = CommandHandler.createCommandHandler(client, prisma);
+  const control = new CommandControl(client, prisma);
 
   client.once(Constants.Events.CLIENT_READY, () => {
-    console.log("Ready!");
-    prisma.$connect().then(() => console.log("DB Connected"));
+    prisma
+      .$connect()
+      .then(() => console.log("Prisma Connected"))
+      .finally(() => console.log("Application Ready"));
   });
 
-  client.once(Constants.Events.DISCONNECT, () => {
-    prisma.$disconnect().then(() => console.log("DB Disconnected"));
+  client.on(Constants.Events.DISCONNECT, () => {
+    prisma
+      .$disconnect()
+      .then(() => console.log("Prisma Disconnected"))
+      .finally(() => console.log("Application Disconnected"));
   });
 
-  client.on(Constants.Events.RECONNECTING, () => {
-    prisma.$connect().then(() => console.log("DB Connected"));
+  client.on(Constants.Events.MESSAGE_CREATE, (message) => {
+    control.handleMessage(message);
   });
 
-  client.on(Constants.Events.ERROR, () => {
-    prisma.$disconnect().then(() => console.log("DB Disconnected"));
-  });
-
-  client.on(Constants.Events.MESSAGE_CREATE, (m) => {
-    commandHandler.handleMessage(m);
-  });
-
-  client.login(process.env.BOT_TOKEN);
+  client.login(process.env.Bot_Token);
 };
 
 main();
-

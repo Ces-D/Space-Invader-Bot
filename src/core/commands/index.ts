@@ -1,69 +1,72 @@
-import { PrismaClient } from ".prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { Client, Message } from "discord.js";
-import Economy, { EconomyCommand } from "../../cogs/economy";
-import Cache from "../utils/cache";
-import Setup, { SetupCommand } from "../utils/setup";
-import Base from "./base";
+import Economy from "../../cogs/Economy";
+import { UserEconomyCmds, AdminEconomyCmds } from "../../cogs/Economy/commands";
 
-export default class CommandHandler extends Base {
-  readonly client: Client;
-  readonly economy: Economy;
-  readonly setup: Setup;
-  readonly cache: Cache;
+export default class CommandControl {
+  protected PRIMARY_PREFIX = "!";
+  readonly Economy: Economy;
 
   constructor(client: Client, prisma: PrismaClient) {
-    super(client);
-    this.setup = Setup.createSetup(client);
-    this.cache = new Cache();
-    this.economy = new Economy(client, prisma, this.cache);
+    this.Economy = new Economy(client, prisma);
   }
 
-  handleMessage(message: Message) {
-    if (this.assertCommand(message)) {
-      const commands = this.Commands(message.content);
+  private isAdmissableMessage(message: Message): boolean {
+    if (message.author.bot) return false; // msg is coming from a bot
+    if (!message.guild) return false; // msg is going into dms
+    if (!message.member) return false; // msg is coming from outside guild user
+    if (message.content.charAt(0) !== this.PRIMARY_PREFIX) return false; // message is command
+    return true;
+  }
 
-      switch (commands.primaryCommand) {
-        case SetupCommand.MISSION_CONTROL:
-          this.setup.createBotMissionControl(message.guild);
-          break;
-
-        case EconomyCommand.GET_USER_WALLET_BALANCE:
-          this.economy.getUserBalance(commands, message);
-          break;
-
-        case EconomyCommand.DEPOSIT_USER_WALLET_FUNDS:
-          this.economy.depositUserFunds(commands, message);
-          break;
-
-        case EconomyCommand.TRANSFER_FUNDS_USER_TO_USER_WALLET:
-          this.economy.transferFundsUserToUser(commands, message);
-          break;
-
-        case EconomyCommand.GET_USER_POSSESSIONS:
-          this.economy.getUserPossessions(commands, message);
-          break;
-
-        case EconomyCommand.GET_GUILD_ITEMS:
-          this.economy.getGuildItems(message);
-          break;
-
-        case EconomyCommand.CREATE_GUILD_ITEM:
-          this.economy.createGuildItem(commands, message, this.setup.missionControlId);
-          break;
-
-        default:
-          console.log(
-            "Command: ",
-            commands.primaryCommand,
-            "\n",
-            "SubCommands: ",
-            commands.subCommands
-          );
-      }
+  private parseForCommand(message: Message) {
+    const m = message.content.trim().toLowerCase();
+    if (m.startsWith(this.PRIMARY_PREFIX)) {
+      return m.split(" ")[0].slice(this.PRIMARY_PREFIX.length);
+    } else {
+      return;
     }
   }
 
-  static createCommandHandler(client: Client, prisma: PrismaClient) {
-    return new CommandHandler(client, prisma);
+  handleMessage(message: Message) {
+    if (this.isAdmissableMessage(message)) {
+      const command = this.parseForCommand(message);
+      switch (command) {
+        case UserEconomyCmds.LIST:
+          this.Economy.listCommands(message);
+          break;
+        case UserEconomyCmds.CREATE_WALLET:
+          this.Economy.createCommand(message);
+          break;
+        case UserEconomyCmds.BALANCE:
+          this.Economy.balanceCommand(message);
+          break;
+        case UserEconomyCmds.MERCHANDISE:
+          this.Economy.getMerchandiseCommand(message);
+          break;
+        case UserEconomyCmds.POSSESSIONS:
+          this.Economy.getPossessionsCommand(message);
+          break;
+        case UserEconomyCmds.PURCHASE:
+          break;
+        case AdminEconomyCmds.CREATE:
+          this.Economy.createItemCommand(message);
+          break;
+        case AdminEconomyCmds.DEPOSIT:
+          this.Economy.depositCommand(message);
+          break;
+        case AdminEconomyCmds.SUMMARY:
+          this.Economy.summaryWalletCommand(message);
+          break;
+        case AdminEconomyCmds.REMOVE:
+          this.Economy.removePossessionCommand(message);
+          break;
+        case AdminEconomyCmds.WITHDRAW:
+          this.Economy.withdrawCommand(message);
+          break;
+        default:
+          console.log(command);
+      }
+    }
   }
 }
